@@ -1,0 +1,695 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home | Hotel Management{% endblock %}
+
+{% block content %}
+<input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+
+<!-- ================================================= -->
+<!-- 🥇 LUXURY HERO SECTION (UPGRADED) -->
+<!-- ================================================= -->
+<section class="lux-hero">
+
+    <video autoplay muted loop playsinline class="lux-hero-video">
+        <source src="{% static 'videos/2.mp4' %}" type="video/mp4">
+    </video>
+
+    <div class="lux-hero-overlay"></div>
+
+    <div class="lux-hero-content text-center text-white">
+        <span class="lux-badge">★★★★★ Premium Stays</span>
+
+        <h1 class="lux-title">
+            Where <span>Luxury</span><br>Meets Comfort
+        </h1>
+
+        <p class="lux-subtitle">
+            Hand-picked hotels · World-class hospitality · Exclusive comfort
+        </p>
+
+        <div class="lux-hero-actions">
+            <a href="{% url 'rooms' %}" class="btn lux-btn-primary">
+                Explore Rooms
+            </a>
+            <a href="#realContent" class="btn lux-btn-outline">
+                View Hotels
+            </a>
+        </div>
+    </div>
+</section>
+
+
+<!-- ================= SEARCH BAR ================= -->
+<div class="container mb-5">
+    <div class="lux-search shadow-lg">
+        <input type="text" id="searchInput" class="form-control form-control-lg"
+               placeholder="Search hotels or rooms...">
+        <select id="citySelect" class="form-select form-select-lg">
+            <option value="">All Cities</option>
+            {% for city in popular_cities %}
+                <option value="{{ city }}" {% if selected_city == city %}selected{% endif %}>
+                    {{ city }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div id="searchResults" class="list-group mt-2"></div>
+</div>
+
+<!-- ================= CATEGORY FILTER ================= -->
+<div class="text-center mb-4">
+    <a href="?category=hotel" class="btn btn-outline-dark btn-sm {% if selected_category == 'hotel' %}active{% endif %}">Hotels</a>
+    <a href="?category=villa" class="btn btn-outline-dark btn-sm {% if selected_category == 'villa' %}active{% endif %}">Villas</a>
+    <a href="?category=resort" class="btn btn-outline-dark btn-sm {% if selected_category == 'resort' %}active{% endif %}">Resorts</a>
+    <a href="/" class="btn btn-outline-secondary btn-sm {% if not selected_category %}active{% endif %}">All</a>
+</div>
+
+<!-- ================= HOTEL CARDS ================= -->
+<div class="container">
+    <div class="row g-4" id="realContent">
+
+        {% for hotel in hotels %}
+        <div class="col-md-4 animate-on-scroll">
+            <div class="lux-card">
+
+                <!-- Wishlist -->
+                <div class="wishlist wishlist-heart">
+                    {% if user.is_authenticated %}
+                        <i class="{% if hotel.id in wishlist_ids %}
+                            fa-solid fa-heart text-danger
+                        {% else %}
+                            fa-regular fa-heart
+                        {% endif %}
+                        wishlist-icon"
+                        data-hotel-id="{{ hotel.id }}"></i>
+                    {% else %}
+                        <a href="{% url 'login' %}">
+                            <i class="fa-regular fa-heart"></i>
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Image -->
+                {% if hotel.images.first %}
+                    <img src="{{ hotel.images.first.image.url }}" alt="{{ hotel.name }}">
+                {% else %}
+                    <div class="no-image">No Image</div>
+                {% endif %}
+
+                <!-- Info -->
+                <div class="lux-body">
+                    <h5>{{ hotel.name }}</h5>
+                    <small class="text-muted">{{ hotel.city }} · {{ hotel.get_category_display }}</small>
+
+                    <!-- Price -->
+                    {% if hotel.min_price %}
+                    <div class="price mt-2">
+                        {% if hotel.min_discount > 0 %}
+                            <span class="old">₹{{ hotel.min_original|floatformat:0 }}</span>
+                            <span class="new">₹{{ hotel.min_price|floatformat:0 }}</span>
+                            <span class="badge bg-danger">-{{ hotel.min_discount }}%</span>
+                        {% else %}
+                            <span class="new">₹{{ hotel.min_price|floatformat:0 }}</span>
+                        {% endif %}
+                        <small>/night</small>
+                    </div>
+                    {% endif %}
+
+                    <!-- Rating -->
+                    <div class="rating mt-2">
+                        {% if hotel.review_count %}
+                            ⭐ {{ hotel.avg_rating|floatformat:1 }}
+                            <small>({{ hotel.review_count }})</small>
+                        {% else %}
+                            <small>No ratings</small>
+                        {% endif %}
+                    </div>
+                    <!-- ================= LUXURY AMENITIES ================= -->
+                    <div class="lux-amenities mt-3">
+                        {% if hotel.has_pool %}<span title="Swimming Pool">🏊</span>{% endif %}
+                        {% if hotel.has_wifi %}<span title="Free WiFi">📶</span>{% endif %}
+                        {% if hotel.has_restaurant %}<span title="Restaurant">🍽</span>{% endif %}
+                        {% if hotel.has_parking %}<span title="Parking">🅿</span>{% endif %}
+                        {% if hotel.pets_allowed %}<span title="Pet Friendly">🐶</span>{% endif %}
+                        {% if hotel.has_spa %}<span title="Spa">🧖</span>{% endif %}
+                    </div>
+                    <a href="{% url 'hotel_detail' hotel.id %}"
+                       class="btn btn-dark btn-sm w-100 mt-3">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-muted">No hotels found.</p>
+        {% endfor %}
+
+    </div>
+</div>
+
+<!-- ================================================= -->
+<!-- ❤️ WHY GUESTS LOVE US -->
+<!-- ================================================= -->
+<section class="container my-5">
+  <h2 class="text-center fw-bold mb-4">Why Guests Love Us</h2>
+
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="lux-love">
+        ⭐⭐⭐⭐⭐
+        <h5>Luxury Experience</h5>
+        <p>Every stay is crafted with elegance, comfort & premium service.</p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="lux-love">
+        💳
+        <h5>Secure & Easy Booking</h5>
+        <p>Fast checkout, secure payments & instant confirmation.</p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="lux-love">
+        🛎
+        <h5>24×7 Support</h5>
+        <p>Our hospitality experts are always here to assist you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.lux-love{
+  background:#fff;
+  padding:30px;
+  border-radius:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,.12);
+  text-align:center;
+}
+.lux-love h5{
+  margin-top:12px;
+  font-weight:700;
+}
+.lux-love p{
+  font-size:14px;
+  color:#666;
+}
+</style>
+
+
+
+<!-- ================================================= -->
+<!-- 🏨 OUR PARTNER LUXURY HOTELS -->
+<!-- ================================================= -->
+<section class="container my-5">
+  <h2 class="text-center fw-bold mb-2">Our Partner Luxury Hotels</h2>
+  <p class="text-center text-muted mb-4">
+    Trusted by world-class hospitality brands
+  </p>
+
+  <div class="row g-4 justify-content-center">
+
+    <!-- TAJ -->
+    <div class="col-md-2 col-6">
+      <a href="/?brand=Taj" class="partner-card">
+        <div class="partner-icon">🏰</div>
+        <h6>Taj Hotels</h6>
+      </a>
+    </div>
+
+    <!-- ITC -->
+    <div class="col-md-2 col-6">
+      <a href="/?brand=ITC" class="partner-card">
+        <div class="partner-icon">🏰</div>
+        <h6>ITC Hotels</h6>
+      </a>
+    </div>
+
+    <!-- OBEROI -->
+    <div class="col-md-2 col-6">
+      <a href="/?brand=Oberoi" class="partner-card">
+        <div class="partner-icon">🏝</div>
+        <h6>Oberoi</h6>
+      </a>
+    </div>
+
+    <!-- MARRIOTT -->
+    <div class="col-md-2 col-6">
+      <a href="/?brand=Marriott" class="partner-card">
+        <div class="partner-icon">🏰</div>
+        <h6>Marriott</h6>
+      </a>
+    </div>
+
+    <!-- HYATT -->
+    <div class="col-md-2 col-6">
+      <a href="/?brand=Hyatt" class="partner-card">
+        <div class="partner-icon">🏰</div>
+        <h6>Hyatt</h6>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+
+<style>
+/* ================= PARTNER HOTEL CARDS ================= */
+
+.partner-card{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    height:160px;
+    background:#ffffff;
+    border-radius:20px;
+    text-decoration:none;
+    box-shadow:0 10px 25px rgba(0,0,0,.12);
+    transition:all .35s ease;
+    color:#000;
+}
+
+.partner-card:hover{
+    transform:translateY(-8px) scale(1.03);
+    box-shadow:0 18px 40px rgba(0,0,0,.2);
+}
+
+.partner-icon{
+    font-size:40px;
+    margin-bottom:10px;
+}
+
+.partner-card h6{
+    font-weight:700;
+    margin:0;
+}
+
+/* 🌙 DARK MODE SUPPORT */
+body.dark-mode .partner-card{
+    background:#121212;
+}
+
+body.dark-mode .partner-card h6{
+    color:#d4af37;
+}
+
+</style>
+
+
+<!-- ================================================= -->
+<!-- 🌍 POPULAR DESTINATIONS -->
+<!-- ================================================= -->
+<section class="container my-5">
+  <h2 class="fw-bold mb-4">Popular Destinations</h2>
+
+  <div class="row g-4">
+  <div class="col-md-3">
+    <a href="/?city=Mumbai" class="lux-city">Mumbai</a>
+  </div>
+  <div class="col-md-3">
+    <a href="/?city=Delhi" class="lux-city">Delhi</a>
+  </div>
+  <div class="col-md-3">
+    <a href="/?city=Goa" class="lux-city">Goa</a>
+  </div>
+  <div class="col-md-3">
+    <a href="/?city=Jaipur" class="lux-city">Jaipur</a>
+  </div>
+</div>
+
+
+<style>
+.lux-city{
+  height:160px;
+  border-radius:20px;
+  background:linear-gradient(135deg,#020617,#020617);
+  color:#d4af37;
+  font-size:22px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 10px 25px rgba(0,0,0,.3);
+}
+</style>
+<!-- ================================================= -->
+<!-- 📊 PLATFORM STATS -->
+<!-- ================================================= -->
+<section class="lux-stats my-5">
+  <div class="container">
+    <div class="row text-center">
+      <div class="col-md-3">
+        <h2>250+</h2>
+        <p>Hotels</p>
+      </div>
+      <div class="col-md-3">
+        <h2>15k+</h2>
+        <p>Happy Guests</p>
+      </div>
+      <div class="col-md-3">
+        <h2>30+</h2>
+        <p>Cities</p>
+      </div>
+      <div class="col-md-3">
+        <h2>4.8★</h2>
+        <p>Average Rating</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.lux-stats{
+  background:linear-gradient(135deg,#020617,#020617);
+  padding:60px 0;
+  border-radius:40px;
+  color:white;
+}
+.lux-stats h2{
+  color:#d4af37;
+  font-size:36px;
+  font-weight:800;
+}
+</style>
+
+<!-- ================================================= -->
+<!-- 💬 GUEST REVIEWS -->
+<!-- ================================================= --><section class="container my-5">
+  <h2 class="text-center fw-bold mb-4">What Our Guests Say</h2>
+
+  <div class="row g-4">
+
+    {% for review in top_reviews %}
+    <div class="col-md-4">
+      <div class="lux-review">
+
+        <!-- ⭐ STAR RATING (4⭐ & 5⭐ BOTH) -->
+        <div class="mb-2">
+          {% for i in "12345" %}
+            {% if forloop.counter <= review.rating|add:0 %}
+              ⭐
+            {% else %}
+              ☆
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <p>"{{ review.comment|truncatewords:20 }}"</p>
+        <strong>- {{ review.user.username }}</strong>
+
+      </div>
+    </div>
+
+    {% empty %}
+    <p class="text-center text-muted">No reviews yet.</p>
+    {% endfor %}
+
+  </div>
+</section>
+
+
+<style>
+.lux-review{
+  background:#fff;
+  padding:25px;
+  border-radius:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,.12);
+}
+</style>
+<!-- ================================================= -->
+<!-- 🚀 FINAL CTA -->
+<!-- ================================================= -->
+<section class="lux-cta text-center my-5">
+  <h2 class="fw-bold">Ready for your next luxury stay?</h2>
+  <p>Book premium hotels at unbeatable prices</p>
+  <a href="{% url 'rooms' %}" class="btn lux-btn-primary btn-lg mt-3">
+    Book Now
+  </a>
+</section>
+
+
+
+<style>
+.lux-cta{
+  background:linear-gradient(135deg,#d4af37,#b8962e);
+  padding:70px 20px;
+  border-radius:40px;
+  color:black;
+}
+</style>
+
+<!-- ================= STYLES ================= -->
+<style>
+/* HERO */
+.lux-hero{
+    position:relative;
+    height:90vh;
+    min-height:520px;
+    overflow:hidden;
+    border-radius:0 0 40px 40px;
+}
+.lux-hero-video{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+.lux-hero-overlay{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(to bottom,
+        rgba(0,0,0,.75),
+        rgba(0,0,0,.45),
+        rgba(2,6,23,.95));
+}
+.lux-hero-content{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    z-index:2;
+    padding:20px;
+}
+.lux-badge{
+    color:#d4af37;
+    border:1px solid rgba(212,175,55,.6);
+    padding:6px 16px;
+    border-radius:30px;
+    font-size:13px;
+    letter-spacing:2px;
+}
+.lux-title{
+    font-family: 'Cinzel', serif;
+    font-size: clamp(42px, 5vw, 68px);
+    font-weight: 600;
+    letter-spacing: 4px;   /* 👈 MOST IMPORTANT */
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+
+.lux-title span{
+    color:#d4af37;
+}
+
+.lux-subtitle{
+    font-family: 'Cinzel', serif;
+    letter-spacing: 1.5px;
+    opacity: .85;
+}
+
+.lux-hero-actions{ display:flex; gap:15px; }
+.lux-btn-primary{
+    background:linear-gradient(135deg,#d4af37,#b8962e);
+    color:black;
+    font-weight:600;
+    padding:14px 30px;
+    border-radius:30px;
+}
+.lux-btn-outline{
+    border:1px solid rgba(255,255,255,.6);
+    color:white;
+    padding:14px 30px;
+    border-radius:30px;
+}
+.lux-search{ display:flex; gap:10px; padding:15px; border-radius:16px; background:white; }
+.lux-card{ background:#fff; border-radius:18px; overflow:hidden; box-shadow:0 10px 25px rgba(0,0,0,.15); transition:.3s; position: relative;}
+.lux-card:hover{ transform:translateY(-6px); }
+.lux-card img{ width:100%; height:220px; object-fit:cover; }
+.wishlist{ position:absolute; top:10px; right:10px; z-index:5; }
+.lux-body{ padding:18px; }
+.price .old{ text-decoration:line-through; color:#888; margin-right:6px; }
+.price .new{ color:#d4af37; font-size:20px; font-weight:700; }
+</style>
+<!-- ================= STYLES ================= -->
+<style>
+.lux-card{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,.15);transition:.3s;}
+.lux-card:hover{transform:translateY(-6px);}
+.lux-card img{width:100%;height:220px;object-fit:cover;}
+.wishlist{position:absolute;top:12px;right:12px;z-index:2;}
+.lux-body{padding:18px;}
+.price .old{text-decoration:line-through;color:#888;margin-right:6px;}
+.price .new{color:#d4af37;font-size:20px;font-weight:700;}
+
+.lux-amenities{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+}
+.lux-amenities span{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:#f8fafc;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 4px 12px rgba(0,0,0,.12);
+    cursor:pointer;
+    transition:.3s;
+}
+.lux-amenities span:hover{
+    background:#d4af37;
+    transform:scale(1.15);
+}
+
+/* ================= WISHLIST HEART (HOME PAGE FIX) ================= */
+.wishlist-heart{
+    position:absolute;
+    top:12px;
+    right:12px;
+    z-index:10;
+}
+
+/* HEART STYLE SAME AS WISHLIST PAGE */
+.wishlist-heart i{
+    font-size:18px;
+    background:rgba(255,255,255,0.95);
+    padding:10px;
+    border-radius:50%;
+    box-shadow:0 4px 12px rgba(0,0,0,0.25);
+    cursor:pointer;
+    transition:0.3s;
+}
+
+/* HOVER EFFECT */
+.wishlist-heart i:hover{
+    transform:scale(1.15);
+}
+
+/* ACTIVE HEART */
+.wishlist-heart i.fa-solid{
+    color:#e63946;
+}
+</style>
+
+<!-- ================= SKELETON SWITCH SCRIPT ================= -->
+<script>
+window.addEventListener("load", () => {
+    setTimeout(() => {
+        document.getElementById("skeletonContainer")?.classList.add("d-none");
+        document.getElementById("realContent")?.classList.remove("d-none");
+    }, 800);
+});
+</script>
+
+<!-- ================= LIVE SEARCH SCRIPT ================= -->
+<script>
+const input = document.getElementById("searchInput");
+const resultsBox = document.getElementById("searchResults");
+
+input.addEventListener("keyup", function () {
+    const query = this.value.trim();
+    if (query.length < 2) {
+        resultsBox.innerHTML = "";
+        return;
+    }
+
+    fetch(`/search/?q=${query}`)
+        .then(res => res.json())
+        .then(data => {
+            resultsBox.innerHTML = "";
+
+            if (data.hotels.length) {
+                resultsBox.innerHTML += `<div class="list-group-item active">Hotels</div>`;
+                data.hotels.forEach(h => {
+                    resultsBox.innerHTML += `
+                        <a href="/hotel/${h.id}/"
+                           class="list-group-item list-group-item-action">
+                            🏨 ${h.name}
+                        </a>`;
+                });
+            }
+
+            if (data.rooms.length) {
+                resultsBox.innerHTML += `<div class="list-group-item active mt-2">Rooms</div>`;
+                data.rooms.forEach(r => {
+                    resultsBox.innerHTML += `
+                        <div class="list-group-item">
+                            🛏 ${r.room_name} (${r.view_type})<br>
+                            <small class="text-muted">Hotel: ${r.hotel__name}</small>
+                        </div>`;
+                });
+            }
+
+            if (!data.hotels.length && !data.rooms.length) {
+                resultsBox.innerHTML =
+                    `<div class="list-group-item text-muted">No results found</div>`;
+            }
+        });
+});
+</script>
+
+<!-- ================= AJAX WISHLIST ================= -->
+<script>
+document.querySelectorAll('.wishlist-icon').forEach(icon => {
+    icon.addEventListener('click', function () {
+
+        const hotelId = this.dataset.hotelId;
+        const csrfToken = document.getElementById('csrfToken').value;
+
+        fetch(`/wishlist/${hotelId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const badge = document.querySelector('.badge');
+
+            if (data.status === 'added') {
+                this.classList.remove('fa-regular','text-dark');
+                this.classList.add('fa-solid','text-danger');
+                if (badge) badge.innerText = parseInt(badge.innerText) + 1;
+            }
+
+            if (data.status === 'removed') {
+                this.classList.remove('fa-solid','text-danger');
+                this.classList.add('fa-regular','text-dark');
+                if (badge) badge.innerText = parseInt(badge.innerText) - 1;
+            }
+        });
+    });
+});
+</script>
+
+<script>
+document.getElementById("citySelect").addEventListener("change", function() {
+    const city = this.value;
+    if (city) {
+        window.location.href = `?city=${city}`;
+    } else {
+        window.location.href = `/`;
+    }
+});
+</script>
+
+{% endblock %}

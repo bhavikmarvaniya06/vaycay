@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block title %}Room Details{% endblock %}
+
+{% block content %}
+
+<div class="row">
+
+    <!-- ================= ROOM INFO ================= -->
+    <div class="col-md-6">
+
+        <!-- ===== ROOM IMAGES CAROUSEL ===== -->
+        {% if room.images.count > 0 %}
+        <div id="roomCarousel" class="carousel slide mb-3" data-bs-ride="carousel">
+            <div class="carousel-inner">
+
+                {% for img in room.images.all %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                    <img src="{{ img.image.url }}"
+                         class="d-block w-100 rounded"
+                         style="height:300px; object-fit:cover;">
+                </div>
+                {% endfor %}
+
+            </div>
+
+            {% if room.images.count > 1 %}
+            <button class="carousel-control-prev" type="button"
+                    data-bs-target="#roomCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+
+            <button class="carousel-control-next" type="button"
+                    data-bs-target="#roomCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+            {% endif %}
+        </div>
+        {% else %}
+            <img src="https://via.placeholder.com/600x300?text=Room+Image"
+                 class="img-fluid rounded mb-3">
+        {% endif %}
+
+        <h2 class="fw-bold">{{ room.room_name }}</h2>
+
+        <p class="mb-1">
+            <strong>Hotel:</strong> {{ room.hotel.name }}
+        </p>
+        <p class="mb-1">
+            <strong>View:</strong> {{ room.view_type }}
+        </p>
+        <p class="mb-2">
+            <strong>Price:</strong> ₹{{ room.price }} / night
+        </p>
+
+        <!-- ⭐ Average Rating -->
+        <div class="mb-3">
+            {% if average_rating %}
+                <span class="text-warning fs-5">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= average_rating %}
+                            ⭐
+                        {% else %}
+                            ☆
+                        {% endif %}
+                    {% endfor %}
+                </span>
+                <small class="text-muted">
+                    ({{ average_rating }}/5 · {{ reviews|length }} reviews)
+                </small>
+            {% else %}
+                <small class="text-muted">No ratings yet</small>
+            {% endif %}
+        </div>
+
+        {% if room.is_available %}
+            <span class="badge bg-success">Available</span>
+        {% else %}
+            <span class="badge bg-danger">Booked</span>
+        {% endif %}
+    </div>
+
+    <!-- ================= ADD REVIEW ================= -->
+    <div class="col-md-6">
+
+        <h5 class="fw-bold mb-3">Add Your Review</h5>
+
+        {% if user.is_authenticated %}
+        <form method="post" class="card p-3 shadow-sm">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Rating</label>
+                <select name="rating" class="form-select" required>
+                    <option value="">Select Rating</option>
+                    <option value="5">⭐⭐⭐⭐⭐ (Excellent)</option>
+                    <option value="4">⭐⭐⭐⭐ (Very Good)</option>
+                    <option value="3">⭐⭐⭐ (Good)</option>
+                    <option value="2">⭐⭐ (Average)</option>
+                    <option value="1">⭐ (Poor)</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Comment</label>
+                <textarea name="comment"
+                          class="form-control"
+                          rows="3"
+                          placeholder="Write your experience..."
+                          required></textarea>
+            </div>
+
+            <button class="btn btn-dark w-100">
+                Submit Review
+            </button>
+        </form>
+        {% else %}
+            <div class="alert alert-warning">
+                Please <a href="{% url 'login' %}">login</a> to write a review.
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<hr class="my-4">
+
+<!-- ================= SHOW REVIEWS ================= -->
+<h5 class="fw-bold mb-3">Customer Reviews</h5>
+
+{% for review in reviews %}
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <strong>{{ review.user.username }}</strong>
+                <small class="text-muted">
+                    {{ review.created_at|date:"d M Y" }}
+                </small>
+            </div>
+
+            <div class="text-warning mb-2">
+                {% for i in "12345" %}
+                    {% if forloop.counter <= review.rating %}
+                        ⭐
+                    {% else %}
+                        ☆
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <p class="mb-0">
+                {{ review.comment }}
+            </p>
+        </div>
+    </div>
+{% empty %}
+    <p class="text-muted">No reviews yet. Be the first to review this room.</p>
+{% endfor %}
+
+{% endblock %}

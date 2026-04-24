@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h3 class="text-center">Verify OTP</h3>
+<hr>
+
+<form method="post" class="mx-auto" style="max-width:400px;">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label class="form-label">Enter OTP</label>
+        <input type="text" name="otp" maxlength="6" class="form-control" autofocus required>
+    </div>
+
+    <button class="btn btn-dark w-100">Verify OTP</button>
+
+    <p class="text-center mt-3">
+        Didn't get OTP? <a href="{% url 'forgot_password' %}">Resend</a>
+    </p>
+
+</form>
+
+{% endblock %}

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Tax Invoice</title>
+
+    <style>
+ body {
+    font-family: DejaVu Sans, Helvetica, Arial, sans-serif;
+}
+        .container { width: 100%; padding: 20px; }
+        .header {
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .hotel-name {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .invoice-title {
+            text-align: right;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .invoice-meta {
+            margin-top: 5px;
+            font-size: 11px;
+            text-align: right;
+        }
+        .section { margin-bottom: 18px; }
+        .section-title {
+            font-weight: bold;
+            background: #f2f2f2;
+            padding: 6px;
+            margin-bottom: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #2c3e50;
+            color: white;
+            padding: 8px;
+            font-size: 11px;
+        }
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-size: 11px;
+        }
+        .text-right { text-align: right; }
+        .grand-total {
+            font-size: 14px;
+            font-weight: bold;
+            background: #f2f2f2;
+        }
+        .status {
+            font-size: 12px;
+            font-weight: bold;
+            color: green;
+        }
+        .footer {
+            margin-top: 30px;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            font-size: 10px;
+            text-align: center;
+            color: #666;
+        }
+        .size{
+            font-size: 30px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <table width="100%">
+            <tr>
+                <td>
+                    <div class="hotel-name">
+                        {{ booking.room.hotel.name }}
+                    </div>
+                    <div class="size">VAYCAY</div>
+
+                    <div>
+                        <strong>GST No:</strong>
+                        {{ booking.room.hotel.gst_number|default:"Not Provided" }}
+                    </div>
+                </td>
+
+                <td class="invoice-title">
+                    TAX INVOICE
+                    <div class="invoice-meta">
+                        Invoice No: INV-{{ booking.id }}<br>
+                        Date: {{ booking.booked_on|date:"d M Y" }}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- CUSTOMER DETAILS -->
+    <div class="section">
+        <div class="section-title">Customer Details</div>
+        <table>
+            <tr>
+                <td><strong>Name:</strong> {{ booking.name }}</td>
+                <td><strong>Email:</strong> {{ booking.email }}</td>
+            </tr>
+            <tr>
+                <td><strong>Phone:</strong> {{ booking.phone }}</td>
+                <td><strong>Country:</strong> {{ booking.country }}</td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>Address:</strong> {{ booking.address }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- BOOKING DETAILS -->
+    <div class="section">
+        <div class="section-title">Booking Details</div>
+        <table>
+            <tr>
+                <td><strong>Hotel:</strong> {{ booking.room.hotel.name }}</td>
+                <td><strong>Room:</strong> {{ booking.room.room_name }}</td>
+            </tr>
+            <tr>
+                <td><strong>View:</strong> {{ booking.room.view_type }}</td>
+                <td><strong>Guests:</strong>
+                    {{ booking.adults }} Adult(s),
+                    {{ booking.children }} Child(ren)
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Check-in:</strong> {{ booking.check_in }}</td>
+                <td><strong>Check-out:</strong> {{ booking.check_out }}</td>
+            </tr>
+            <tr>
+                <td><strong>Total Nights:</strong> {{ booking.total_nights }}</td>
+                <td>
+                    <strong>Status:</strong>
+                    <span class="status">{{ booking.status|upper }}</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- BILLING -->
+    <div class="section">
+        <div class="section-title">Billing Summary</div>
+        <table>
+            <tr>
+                <th>Description</th>
+                <th class="text-right">Amount (INR)</th>
+            </tr>
+
+            <tr>
+                <td>Room Charges</td>
+                <td class="text-right">Rs.{{ booking.base_amount }}</td>
+            </tr>
+
+            <tr>
+                <td>GST @ {{ booking.gst_percent }}%</td>
+                <td class="text-right">Rs.{{ booking.gst_amount }}</td>
+            </tr>
+
+            <!-- ✅ FIXED CONDITION -->
+            {% if booking.discount_amount and booking.discount_amount > 0 %}
+            <tr>
+                <td>Discount</td>
+                <td class="text-right">- Rs.{{ booking.discount_amount }}</td>
+            </tr>
+            {% endif %}
+
+            <tr class="grand-total">
+                <td class="text-right">Grand Total</td>
+                <td class="text-right">
+                    Rs.{{ booking.final_amount|default:booking.total_amount }}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer">
+        This is a system-generated GST invoice.<br>
+        Thank you for choosing {{ booking.room.hotel.name }}.
+    </div>
+
+</div>
+</body>
+</html>

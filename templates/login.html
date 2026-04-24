@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<h2 class="text-center">Login</h2>
+
+<form method="post" id="loginForm" class="mx-auto" style="max-width: 400px;" novalidate>
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label>Username</label>
+        <input type="text" name="username" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label>Password</label>
+        <input type="password" name="password" class="form-control" required>
+    </div>
+
+    <p class="text-end">
+        <a href="{% url 'forgot_password' %}" class="text-decoration-none">Forgot password?</a>
+    </p>
+
+    <!-- 🔥 BUTTON CHANGE -->
+    <button type="button" onclick="handleLogin()" class="btn btn-primary w-100">
+        Login
+    </button>
+
+    <p class="text-center mt-3">
+        Don’t have an account? <a href="{% url 'register' %}">Register</a>
+    </p>
+</form>
+
+<!-- 🔥 TOP POPUP -->
+<div id="topPopup" class="top-popup">
+    <span id="popupText"></span>
+</div>
+
+<!-- 🔥 DJANGO MESSAGES -->
+{% if messages %}
+<script>
+    {% for message in messages %}
+        showPopup("{{ message }}");
+    {% endfor %}
+</script>
+{% endif %}
+
+<!-- 🔥 JS -->
+<script>
+function handleLogin() {
+    let inputs = document.querySelectorAll("#loginForm [required]");
+    let valid = true;
+
+    inputs.forEach(input => {
+        if (!input.value.trim()) {
+            input.style.border = "2px solid red";
+            valid = false;
+        } else {
+            input.style.border = "";
+        }
+    });
+
+    if (!valid) {
+        showPopup("Please enter username and password!");
+        return;
+    }
+
+    document.getElementById("loginForm").submit();
+}
+
+// 🔥 POPUP
+function showPopup(message) {
+    const popup = document.getElementById("topPopup");
+    document.getElementById("popupText").innerText = message;
+
+    popup.classList.add("show");
+
+    setTimeout(() => {
+        popup.classList.remove("show");
+    }, 3000);
+}
+</script>
+
+<!-- 🔥 STYLE -->
+<style>
+.top-popup {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #ff4d4d;
+    color: #fff;
+    padding: 12px 25px;
+    border-radius: 30px;
+    font-weight: 500;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    z-index: 9999;
+    transition: 0.4s ease;
+}
+
+.top-popup.show {
+    transform: translateX(-50%) translateY(0);
+}
+</style>
+
+{% endblock %}

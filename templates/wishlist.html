@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+My Wishlist | Hotel Management
+{% endblock %}
+
+{% block content %}
+
+<input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+
+<!-- ===== HEADER + ACTION BUTTONS ===== -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+
+    <h2 class="fw-bold mb-0">❤️ My Wishlist</h2>
+
+    {% if hotels %}
+    <div class="d-flex gap-2">
+
+        <button class="btn btn-outline-primary btn-sm"
+                onclick="copyWishlistLink()">
+            <i class="fa-solid fa-link"></i> Copy Link
+        </button>
+
+        <a class="btn btn-outline-success btn-sm"
+           href="https://wa.me/?text={{ share_url|urlencode }}"
+           target="_blank">
+            <i class="fa-brands fa-whatsapp"></i>
+        </a>
+
+        <a class="btn btn-outline-secondary btn-sm"
+           href="mailto:?subject=My Wishlist&body={{ share_url|urlencode }}">
+            <i class="fa-solid fa-envelope"></i>
+        </a>
+
+        <button id="clearWishlistBtn"
+                class="btn btn-outline-danger btn-sm">
+            <i class="fa-solid fa-trash"></i>
+        </button>
+
+    </div>
+    {% endif %}
+
+</div>
+
+<div class="row" id="wishlistContainer">
+
+{% for hotel in hotels %}
+<div class="col-md-4 mb-4 wishlist-card" data-hotel-id="{{ hotel.id }}">
+    <div class="card h-100 shadow-sm position-relative wishlist-box">
+
+        <!-- ❤️ AJAX REMOVE SINGLE -->
+        <div class="position-absolute wishlist-heart">
+            <i class="fa-solid fa-heart remove-wishlist"
+               data-hotel-id="{{ hotel.id }}"
+               title="Remove from wishlist">
+            </i>
+        </div>
+
+        {% if hotel.images.first %}
+            <img src="{{ hotel.images.first.image.url }}"
+                 class="card-img-top wishlist-img">
+        {% else %}
+            <div class="no-image">
+                No Image Available
+            </div>
+        {% endif %}
+
+        <div class="card-body d-flex flex-column">
+
+            <h5 class="fw-bold text-center mb-0">{{ hotel.name }}</h5>
+
+            <small class="text-muted text-center mb-2">
+                {{ hotel.city }}
+            </small>
+
+            <p class="text-muted text-center">
+                {{ hotel.description|truncatewords:15 }}
+            </p>
+
+            <a href="{% url 'hotel_detail' hotel.id %}"
+               class="btn btn-dark btn-sm mt-auto">
+                View Details
+            </a>
+
+        </div>
+    </div>
+</div>
+
+{% empty %}
+<div class="col-12 text-center">
+    <h4 class="text-muted">💔 Your wishlist is empty</h4>
+    <a href="{% url 'home' %}" class="btn btn-dark mt-3">
+        Browse Hotels
+    </a>
+</div>
+{% endfor %}
+
+</div>
+
+<!-- ===== CSS FIX ===== -->
+<style>
+/* CARD */
+.wishlist-box{
+    position: relative;
+    border-radius:18px;
+    overflow:hidden;
+}
+
+/* IMAGE */
+.wishlist-img{
+    height:220px;
+    object-fit:cover;
+}
+
+/* NO IMAGE */
+.no-image{
+    height:220px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#6c757d;
+    color:white;
+}
+
+/* ❤️ HEART FIX */
+.wishlist-heart{
+    top:10px;
+    right:10px;
+    z-index:20;
+}
+
+.wishlist-heart i{
+    font-size:18px;
+    color:#e63946;
+    background:white;
+    padding:10px;
+    border-radius:50%;
+    box-shadow:0 4px 12px rgba(0,0,0,0.25);
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.wishlist-heart i:hover{
+    transform:scale(1.15);
+}
+</style>
+
+<!-- ===== JS ===== -->
+<script>
+const csrfToken = document.getElementById('csrfToken').value;
+
+function copyWishlistLink() {
+    const url = "{{ share_url }}";
+    navigator.clipboard.writeText(url);
+    alert("Wishlist link copied!");
+}
+
+document.querySelectorAll('.remove-wishlist').forEach(icon => {
+    icon.addEventListener('click', function () {
+
+        const hotelId = this.dataset.hotelId;
+
+        fetch(`/wishlist/${hotelId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'removed') {
+
+                const card = document.querySelector(
+                    `.wishlist-card[data-hotel-id="${hotelId}"]`
+                );
+
+                card.style.opacity = "0";
+                setTimeout(() => {
+                    card.remove();
+                    updateBadge(-1);
+                    checkEmpty();
+                }, 300);
+            }
+        });
+    });
+});
+
+const clearBtn = document.getElementById("clearWishlistBtn");
+
+if (clearBtn) {
+    clearBtn.addEventListener("click", function () {
+
+        if (!confirm("Remove all wishlist items?")) return;
+
+        fetch("{% url 'clear_wishlist' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrfToken,
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "cleared") {
+                document.getElementById("wishlistContainer").innerHTML = `
+                    <div class="col-12 text-center">
+                        <h4 class="text-muted">💔 Your wishlist is empty</h4>
+                        <a href="/" class="btn btn-dark mt-3">
+                            Browse Hotels
+                        </a>
+                    </div>
+                `;
+                const badge = document.querySelector('.badge');
+                if (badge) badge.remove();
+            }
+        });
+    });
+}
+
+function updateBadge(change) {
+    const badge = document.querySelector('.badge');
+    if (!badge) return;
+
+    const count = parseInt(badge.innerText) + change;
+    if (count > 0) badge.innerText = count;
+    else badge.remove();
+}
+
+function checkEmpty() {
+    if (!document.querySelector('.wishlist-card')) {
+        document.getElementById("wishlistContainer").innerHTML = `
+            <div class="col-12 text-center">
+                <h4 class="text-muted">💔 Your wishlist is empty</h4>
+                <a href="/" class="btn btn-dark mt-3">Browse Hotels</a>
+            </div>
+        `;
+    }
+}
+</script>
+
+{% endblock %}

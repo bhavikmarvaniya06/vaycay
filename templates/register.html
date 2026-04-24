@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+
+<h2 class="text-center">Register</h2>
+
+<form method="post" id="registerForm" class="mx-auto" style="max-width: 400px;">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label>Username</label>
+        <input type="text" name="username" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label>Email</label>
+        <input type="email" name="email" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label>Password</label>
+        <input type="password" name="password1" class="form-control" required>
+        <div id="passwordStrength" style="font-size: 13px; margin-top: 5px;"></div>
+    </div>
+
+    <div class="mb-3">
+        <label>Confirm Password</label>
+        <input type="password" name="password2" class="form-control" required>
+    </div>
+
+    <button type="submit" class="btn btn-success w-100">
+        Register
+    </button>
+
+    <p class="text-center mt-3">
+        Already have an account? <a href="{% url 'login' %}">Login</a>
+    </p>
+</form>
+
+<!-- 🔥 POPUP -->
+<div id="topPopup" class="top-popup">
+    <span id="popupText"></span>
+</div>
+
+<!-- 🔥 DJANGO MESSAGES -->
+{% if messages %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    {% for message in messages %}
+        showPopup("{{ message }}");
+    {% endfor %}
+});
+</script>
+{% endif %}
+
+<!-- 🔥 JS -->
+<script>
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    const form = document.getElementById("registerForm");
+
+    // ✅ SAFE VALIDATION (NO BLOCK UNLESS ERROR)
+    form.addEventListener("submit", function(e) {
+
+        let password = document.querySelector('[name="password1"]').value;
+        let confirm = document.querySelector('[name="password2"]').value;
+
+        if (password !== confirm) {
+            e.preventDefault();
+            showPopup("Passwords do not match!");
+        }
+    });
+
+    // ✅ PASSWORD STRENGTH
+    const passInput = document.querySelector('[name="password1"]');
+    const msg = document.getElementById("passwordStrength");
+
+    passInput.addEventListener("input", function() {
+        let val = this.value;
+
+        if (val.length < 6) {
+            msg.innerHTML = "Weak ❌";
+            msg.style.color = "red";
+        } 
+        else if (val.match(/[A-Z]/) && val.match(/\d/)) {
+            msg.innerHTML = "Medium ⚠️";
+            msg.style.color = "orange";
+        } 
+        else if (val.match(/[A-Z]/) && val.match(/[a-z]/) && val.match(/\d/) && val.match(/[@$!%*?&]/)) {
+            msg.innerHTML = "Strong ✅";
+            msg.style.color = "green";
+        } 
+        else {
+            msg.innerHTML = "";
+        }
+    });
+
+});
+
+// ✅ POPUP FUNCTION
+function showPopup(message) {
+    const popup = document.getElementById("topPopup");
+    document.getElementById("popupText").innerText = message;
+
+    popup.classList.add("show");
+
+    setTimeout(() => {
+        popup.classList.remove("show");
+    }, 3000);
+}
+
+</script>
+
+<!-- 🔥 STYLE -->
+<style>
+.top-popup {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #28a745;
+    color: #fff;
+    padding: 12px 25px;
+    border-radius: 30px;
+    font-weight: 500;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    z-index: 9999;
+    transition: 0.4s ease;
+}
+
+.top-popup.show {
+    transform: translateX(-50%) translateY(0);
+}
+</style>
+
+{% endblock %}

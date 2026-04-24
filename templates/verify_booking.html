@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Verification</title>
+    <style>
+        body { font-family: Arial; background: #f8f9fa; }
+        .card {
+            max-width: 600px;
+            margin: 50px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,.1);
+        }
+        .success {
+            color: green;
+            font-size: 22px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <p class="success">✔ Booking Verified</p>
+
+    <p><strong>Booking ID:</strong> {{ booking.id }}</p>
+    <p><strong>Hotel:</strong> {{ booking.room.hotel.name }}</p>
+    <p><strong>Room:</strong> {{ booking.room.room_name }}</p>
+    <p><strong>Check-in:</strong> {{ booking.check_in }}</p>
+    <p><strong>Check-out:</strong> {{ booking.check_out }}</p>
+    <p><strong>Status:</strong> {{ booking.status|upper }}</p>
+    <p><strong>Paid:</strong> {{ booking.is_paid|yesno:"Yes,No" }}</p>
+</div>
+
+</body>
+</html>

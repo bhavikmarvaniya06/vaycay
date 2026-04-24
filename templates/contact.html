@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Us | HotelMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+
+        <div class="text-center mb-4">
+            <h2 class="fw-bold">Contact Us</h2>
+            <p class="text-muted">
+                We are here to help you 24×7
+            </p>
+        </div>
+
+        <div class="row">
+
+            <!-- Contact Details -->
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm p-4 h-100">
+                    <h5 class="fw-bold mb-3">📞 Hotel Support</h5>
+
+                    <p>
+                        <i class="bi bi-telephone-fill me-2"></i>
+                        +91 98765 43210
+                    </p>
+
+                    <p>
+                        <i class="bi bi-envelope-fill me-2"></i>
+                        support@hotelms.com
+                    </p>
+
+                    <p>
+                        <i class="bi bi-geo-alt-fill me-2"></i>
+                        Ahmedabad, Gujarat, India
+                    </p>
+
+                    <p class="small text-muted mb-0">
+                        Available 24×7 for booking & support.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Contact Form + Google Map -->
+            <div class="col-md-8 mb-4">
+                <div class="card shadow-sm p-3 h-100">
+                    <h5 class="fw-bold mb-3">✉️ Send a Message</h5>
+
+                    <!-- CONTACT FORM -->
+                    <form method="POST" action="">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Name</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Email</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Subject</label>
+                            <input type="text" class="form-control" name="subject" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Message</label>
+                            <textarea class="form-control" rows="4" name="message" required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-4">
+                            Send Message
+                        </button>
+                    </form>
+
+                    <h5 class="fw-bold mb-3">📍 Our Location</h5>
+
+                    <!-- GOOGLE MAP -->
+                    <div class="ratio ratio-16x9 rounded overflow-hidden">
+                        <iframe
+                            src="https://www.google.com/maps?q=Ahmedabad,Gujarat,India&output=embed"
+                            allowfullscreen=""
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

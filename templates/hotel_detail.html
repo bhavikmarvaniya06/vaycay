@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ hotel.name }} | Hotel Details
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <h2 class="text-center mb-0">{{ hotel.name }}</h2>
+
+    <p class="text-center text-muted mb-4">
+        {% if hotel.category == 'hotel' %}🏨{% endif %}
+        {% if hotel.category == 'villa' %}🏡{% endif %}
+        {% if hotel.category == 'resort' %}🏝{% endif %}
+        {{ hotel.get_category_display }}
+    </p>
+
+    {% if hotel.images.count > 0 %}
+    <div id="hotelCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            {% for img in hotel.images.all %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                <img src="{{ img.image.url }}"
+     class="d-block w-100 rounded gallery-thumb"
+     style="height:450px; object-fit:cover; cursor:pointer;"
+     data-type="hotel"
+     data-index="{{ forloop.counter0 }}"
+     data-bs-toggle="modal"
+     data-bs-target="#imageGalleryModal">
+
+            </div>
+            {% endfor %}
+        </div>
+
+        <button class="carousel-control-prev" type="button"
+                data-bs-target="#hotelCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button"
+                data-bs-target="#hotelCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+    {% endif %}
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title">About Hotel</h5>
+            <p class="card-text">{{ hotel.description }}</p>
+            <p class="mb-0">
+                <strong>Category:</strong> {{ hotel.get_category_display }}
+            </p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="mb-4">At a glance</h4>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Hotel size</strong><br>{{ hotel.hotel_size }} rooms</p>
+                    <p><strong>Arriving / Leaving</strong><br>
+                        Check-in: {{ hotel.check_in_time }}<br>
+                        Check-out: {{ hotel.check_out_time }}<br>
+                        Minimum check-in age: {{ hotel.min_check_in_age }}
+                    </p>
+                    <p><strong>Special check-in instructions</strong><br>
+                        {{ hotel.special_checkin_info|default:"—" }}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <p><strong>Required at check-in</strong><br>
+                        {% if hotel.require_deposit %}Deposit required<br>{% endif %}
+                        {% if hotel.require_id %}Government-issued photo ID required{% endif %}
+                    </p>
+                    <p><strong>Pets</strong><br>
+                        {% if hotel.pets_allowed %}Pets allowed{% else %}Pets not allowed{% endif %}
+                    </p>
+                    <p><strong>Internet</strong><br>
+                        Free Wi-Fi in rooms ({{ hotel.wifi_speed }})
+                    </p>
+                    <p><strong>Parking</strong><br>
+                        {% if hotel.free_self_parking %}Free self parking<br>{% endif %}
+                        {% if hotel.free_valet_parking %}Free valet parking{% endif %}
+                    </p>
+                    <p><strong>Other</strong><br>
+                        {% if hotel.smoking_area %}Designated smoking areas{% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 🌍 Explore the Area Section (Added) -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="mb-3">Explore the area</h4>
+
+            <!-- Google Map -->
+            <iframe width="100%" height="250"
+                    style="border:0; border-radius:10px;"
+                    loading="lazy"
+                    allowfullscreen
+                    referrerpolicy="no-referrer-when-downgrade"
+                    src="https://www.google.com/maps?q={{ hotel.city }}&output=embed">
+            </iframe>
+
+            <hr>
+
+            {% if nearby %}
+            <ul class="list-unstyled mt-2">
+                {% for place in nearby %}
+                <li class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <i class="fa-solid fa-location-dot text-danger me-2"></i>
+                        {{ place.title }}
+                    </div>
+                    <small class="text-muted">{{ place.time }}</small>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted mb-0">No nearby places added yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <h4 class="mb-3">Available Rooms</h4>
+
+    {% if rooms %}
+    <div class="row">
+        {% for room in rooms %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+
+                {% if room.images.count > 0 %}
+                <img src="{{ room.images.first.image.url }}"
+     class="card-img-top gallery-thumb"
+     style="height:220px; object-fit:cover; cursor:pointer;"
+     data-type="room"
+     data-room="{{ room.id }}"
+     data-index="0"
+     data-bs-toggle="modal"
+     data-bs-target="#imageGalleryModal">
+
+                {% else %}
+                <img src="https://via.placeholder.com/400x220?text=Room+Image"
+                     class="card-img-top">
+                {% endif %}
+
+                <div class="card-body">
+                    <h5>{{ room.room_name }}</h5>
+                    <p class="text-muted">{{ room.view_type }} View</p>
+
+                    <ul class="list-unstyled small">
+                        <li>📐 {{ room.size_sq_m }} sq m</li>
+                        <li>👥 Sleeps {{ room.sleeps }}</li>
+                        {% if room.has_wifi %}<li>📶 Free Wi-Fi</li>{% endif %}
+                        {% if room.refundable %}<li class="text-success">✔ Fully refundable</li>{% endif %}
+                    </ul>
+
+                    {% if room.discount > 0 %}
+                        <p class="mb-1">
+                            <span class="text-muted text-decoration-line-through">₹{{ room.price }}</span>
+                            <span class="text-success fw-bold ms-1">₹{{ room.final_price }}</span>
+                            <span class="badge bg-danger ms-2">-{{ room.discount }}%</span>
+                        </p>
+                    {% else %}
+                        <p class="fw-bold text-primary">₹{{ room.price }} / night</p>
+                    {% endif %}
+
+                    {% if room.is_available %}
+                        <a href="{% url 'book_room' room.id %}" class="btn btn-dark w-100">Reserve</a>
+                    {% else %}
+                        <button class="btn btn-secondary w-100" disabled>Not Available</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p class="text-muted">No rooms found.</p>
+    {% endif %}
+<!-- ================= Fees & Policies ================= -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h4 class="mb-4">Fees & Policies</h4>
+
+        <!-- Optional Extras -->
+        <div class="mb-4">
+            <h6 class="fw-bold">Optional extras</h6>
+            <ul class="ps-3">
+                {% if hotel.breakfast_price_adult %}
+                <li>
+                    Buffet breakfast is offered for an extra charge of
+                    approximately ₹{{ hotel.breakfast_price_adult }} per adult
+                </li>
+                {% endif %}
+
+                <li>
+                    Airport shuttle service is offered for an extra charge
+                    (one-way, subject to availability)
+                </li>
+
+                <li>
+                    Late check-out can be arranged for an extra charge
+                    (subject to availability)
+                </li>
+            </ul>
+        </div>
+
+        <!-- Children & Extra Beds -->
+        <div class="mb-4">
+            <h6 class="fw-bold">Children & extra beds</h6>
+            <ul class="ps-3">
+                <li>Rollaway beds are available for an extra charge</li>
+                <li>Children are welcome</li>
+            </ul>
+        </div>
+
+        <!-- Pets -->
+        <div class="mb-4">
+            <h6 class="fw-bold">Pets</h6>
+            <ul class="ps-3">
+                {% if hotel.pets_allowed %}
+                <li>Pets are allowed for an extra charge</li>
+                {% else %}
+                <li>Pets are not allowed</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- Pool -->
+        {% if hotel.pool_timings %}
+        <div class="mb-4">
+            <h6 class="fw-bold">Pool</h6>
+            <ul class="ps-3">
+                <li>Pool access available from {{ hotel.pool_timings }}</li>
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Policies -->
+        {% if hotel.policies %}
+        <div class="mb-4">
+            <h6 class="fw-bold">Policies</h6>
+            <ul class="ps-3">
+                {% for line in hotel.policies.splitlines %}
+                    {% if line %}
+                    <li>{{ line }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Also Known As -->
+        {% if hotel.also_known_as %}
+        <div>
+            <h6 class="fw-bold">Also known as</h6>
+            <ul class="ps-3">
+                {% for name in hotel.also_known_as.splitlines %}
+                <li>{{ name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+
+    <div class="text-center mt-4">
+        <a href="{% url 'home' %}" class="btn btn-outline-dark">← Back to Hotels</a>
+    </div>
+
+</div>
+<!-- ================= IMAGE GALLERY MODAL ================= -->
+<div class="modal fade" id="imageGalleryModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content bg-dark">
+
+      <div class="modal-body p-0 position-relative">
+        <button type="button"
+                class="btn-close btn-close-white position-absolute top-0 end-0 m-3"
+                data-bs-dismiss="modal"></button>
+
+        <div id="galleryCarousel" class="carousel slide">
+          <div class="carousel-inner" id="galleryInner">
+            <!-- images JS thi load thase -->
+          </div>
+
+          <button class="carousel-control-prev" type="button"
+                  data-bs-target="#galleryCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+          </button>
+          <button class="carousel-control-next" type="button"
+                  data-bs-target="#galleryCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const hotelImages = [
+    {% for img in hotel.images.all %}
+      "{{ img.image.url }}",
+    {% endfor %}
+  ];
+
+  const roomImages = {
+    {% for room in rooms %}
+    "{{ room.id }}": [
+      {% for img in room.images.all %}
+        "{{ img.image.url }}",
+      {% endfor %}
+    ],
+    {% endfor %}
+  };
+
+  const galleryInner = document.getElementById("galleryInner");
+  const galleryCarousel = document.getElementById("galleryCarousel");
+
+  document.querySelectorAll(".gallery-thumb").forEach(el => {
+    el.addEventListener("click", () => {
+
+      const type = el.dataset.type;   // hotel | room
+      const index = parseInt(el.dataset.index || 0);
+      const roomId = el.dataset.room;
+
+      const images = (type === "hotel")
+        ? hotelImages
+        : (roomImages[roomId] || []);
+
+      galleryInner.innerHTML = "";
+
+      images.forEach((src, i) => {
+        galleryInner.innerHTML += `
+          <div class="carousel-item ${i === index ? "active" : ""}">
+            <img src="${src}"
+                 class="d-block w-100"
+                 style="max-height:90vh; object-fit:contain;">
+          </div>`;
+      });
+
+      const carousel = bootstrap.Carousel.getOrCreateInstance(galleryCarousel);
+      carousel.to(index);
+    });
+  });
+
+});
+</script>
+
+
+{% endblock %}
+

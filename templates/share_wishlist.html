@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+{{ shared_user.username }}'s Wishlist
+{% endblock %}
+
+{% block content %}
+
+<h2 class="text-center fw-bold mb-4">
+    ❤️ {{ shared_user.username }}'s Wishlist
+</h2>
+
+{% if hotels %}
+<div class="row">
+
+{% for hotel in hotels %}
+<div class="col-md-4 mb-4">
+    <div class="card h-100 shadow-sm">
+
+        {% if hotel.images.first %}
+            <img src="{{ hotel.images.first.image.url }}"
+                 class="card-img-top"
+                 style="height:220px; object-fit:cover;">
+        {% endif %}
+
+        <div class="card-body text-center">
+            <h5 class="fw-bold">{{ hotel.name }}</h5>
+            <small class="text-muted">{{ hotel.city }}</small>
+
+            <p class="text-muted mt-2">
+                {{ hotel.description|truncatewords:15 }}
+            </p>
+
+            <a href="{% url 'hotel_detail' hotel.id %}"
+               class="btn btn-dark btn-sm">
+                View Hotel
+            </a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+</div>
+{% else %}
+<div class="text-center">
+    <h4 class="text-muted">No hotels in wishlist</h4>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% block title %}Book Room{% endblock %}
+
+{% block content %}
+
+<!-- 🔥 Flatpickr -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<div class="luxury-bg">
+
+  <div class="container py-5">
+    <h2 class="text-center text-black mb-4 fw-bold">Book Your Stay ✨</h2>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+
+        <div class="luxury-card">
+
+          <div class="text-center mb-4">
+            <h4 class="fw-bold">{{ room.hotel.name }}</h4>
+            <p class="text-muted">
+              {{ room.room_name }} • ₹{{ room.price }}/night
+            </p>
+          </div>
+
+            {% if messages %}
+              {% for message in messages %}
+                {% if "booking" in message.tags %}
+                  <div class="alert alert-danger">{{ message }}</div>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+
+          <form method="post" id="bookingForm" novalidate>
+            {% csrf_token %}
+
+            <h6 class="section-title">Customer Details</h6>
+
+            <input type="text" name="name" class="form-control luxury-input" placeholder="Full Name" required>
+            <input type="email" name="email" class="form-control luxury-input" placeholder="Email" required>
+            <input type="tel" name="phone" class="form-control luxury-input" placeholder="Phone" required>
+            <textarea name="address" class="form-control luxury-input" placeholder="Address" required></textarea>
+<input type="text" class="form-control luxury-input" value="India" readonly>
+<!-- 🔥 hidden field (IMPORTANT for backend) -->
+<input type="hidden" name="country" value="India">          
+          <h6 class="section-title mt-4">Booking Details</h6>
+
+            <div class="row">
+              <div class="col-md-6">
+                <input type="text" id="checkin" name="check_in" class="form-control luxury-input" placeholder="Check-in" required>
+              </div>
+              <div class="col-md-6">
+                <input type="text" id="checkout" name="check_out" class="form-control luxury-input" placeholder="Check-out" required>
+              </div>
+            </div>
+
+            <h6 class="section-title mt-4">Guests</h6>
+
+            <div class="row">
+              <div class="col-md-6">
+                <input type="number" name="adults" class="form-control luxury-input" min="1" value="1" required>
+              </div>
+              <div class="col-md-6">
+                <input type="number" name="children" class="form-control luxury-input" min="0" value="0">
+              </div>
+            </div>
+
+            <div class="price-box mt-4 text-center">
+              <h5 id="nights">0 Nights</h5>
+              <h4 class="fw-bold">₹<span id="total">0</span></h4>
+            </div>
+
+            <!-- 🔥 IMPORTANT CHANGE -->
+            <button type="button" class="btn luxury-btn w-100 mt-4" onclick="handleSubmit()">
+              Confirm & Pay 🚀
+            </button>
+
+          </form>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🔥 TOP POPUP -->
+<div id="topPopup" class="top-popup">
+  <span id="popupText">Please fill all required fields</span>
+</div>
+
+<!-- 🔥 JS -->
+<script>
+const price = {{ room.price }};
+
+// 📅 Flatpickr
+const checkin = flatpickr("#checkin", {
+    minDate: "today",
+    dateFormat: "Y-m-d",
+    onChange: updatePrice
+});
+
+const checkout = flatpickr("#checkout", {
+    minDate: "today",
+    dateFormat: "Y-m-d",
+    onChange: updatePrice
+});
+
+// 💰 Price calc
+function updatePrice() {
+    let start = new Date(checkin.input.value);
+    let end = new Date(checkout.input.value);
+
+    if (start && end && end > start) {
+        let nights = (end - start) / (1000 * 60 * 60 * 24);
+        document.getElementById("nights").innerText = nights + " Nights";
+        document.getElementById("total").innerText = nights * price;
+    }
+}
+
+// 🔥 MAIN FIX (NO PAGE RELOAD)
+function handleSubmit() {
+    let inputs = document.querySelectorAll("#bookingForm [required]");
+    let valid = true;
+
+    inputs.forEach(input => {
+        if (!input.value.trim()) {
+            input.style.border = "2px solid red";
+            valid = false;
+        } else {
+            input.style.border = "";
+        }
+    });
+
+    if (!valid) {
+        showPopup("Please fill all required fields!");
+        return; // ❌ STOP
+    }
+
+    // ✅ SUBMIT ONLY IF VALID
+    document.getElementById("bookingForm").submit();
+}
+
+// 🔝 Popup
+function showPopup(message) {
+    const popup = document.getElementById("topPopup");
+    document.getElementById("popupText").innerText = message;
+
+    popup.classList.add("show");
+
+    setTimeout(() => {
+        popup.classList.remove("show");
+    }, 3000);
+}
+</script>
+
+<!-- 🔥 STYLE -->
+<style>
+
+.luxury-bg {
+    background: linear-gradient(#fff);
+    min-height: 100vh;
+}
+
+.luxury-card {
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+}
+
+.luxury-input {
+    margin-bottom: 12px;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.section-title {
+    font-weight: 600;
+}
+
+.luxury-btn {
+    background: linear-gradient(45deg, #000, #444);
+    color: #fff;
+    border-radius: 30px;
+    padding: 12px;
+}
+
+.price-box {
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+/* 🔝 TOP POPUP */
+.top-popup {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #ff4d4d;
+    color: #fff;
+    padding: 12px 25px;
+    border-radius: 30px;
+    font-weight: 500;
+    z-index: 9999;
+    transition: 0.4s ease;
+}
+
+.top-popup.show {
+    transform: translateX(-50%) translateY(0);
+}
+
+</style>
+
+{% endblock %}

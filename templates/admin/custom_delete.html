@@ -1,0 +1,33 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools %}
+    {{ block.super }}   <!-- 🔥 VERY IMPORTANT -->
+
+    <li>
+        <form method="post" action="delete-selected/" id="deleteForm">
+            {% csrf_token %}
+            <input type="hidden" name="ids" id="selected_ids">
+
+            <button type="submit" 
+                    style="background:red; color:white; padding:8px 12px; border-radius:5px;">
+                🔥 Delete Selected
+            </button>
+        </form>
+    </li>
+
+<script>
+document.getElementById("deleteForm").addEventListener("submit", function(){
+
+    let ids = [];
+
+    document.querySelectorAll("input.action-select").forEach(el=>{
+        if(el.checked && el.value && el.value !== "on"){
+            ids.push(el.value);
+        }
+    });
+
+    document.getElementById("selected_ids").value = ids.join(",");
+});
+</script>
+
+{% endblock %}

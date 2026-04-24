@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% block title %}Rooms{% endblock %}
+
+{% block content %}
+
+<h2 class="fw-bold text-center mb-4">Available Rooms</h2>
+
+<!-- ================= CATEGORY FILTER ================= -->
+<div class="text-center mb-3">
+    <a href="?category=hotel"
+       class="btn btn-outline-dark btn-sm {% if selected_category == 'hotel' %}active{% endif %}">
+        Hotels
+    </a>
+    <a href="?category=villa"
+       class="btn btn-outline-dark btn-sm {% if selected_category == 'villa' %}active{% endif %}">
+        Villas
+    </a>
+    <a href="?category=resort"
+       class="btn btn-outline-dark btn-sm {% if selected_category == 'resort' %}active{% endif %}">
+        Resorts
+    </a>
+    <a href="{% url 'rooms' %}"
+       class="btn btn-outline-secondary btn-sm {% if not selected_category %}active{% endif %}">
+        All
+    </a>
+</div>
+
+<!-- ================= FILTER SECTION ================= -->
+<form method="get" class="card p-3 mb-4 shadow-sm">
+    <div class="row g-3">
+
+        <!-- Min Price -->
+        <div class="col-md-3">
+            <label class="form-label">Min Price</label>
+            <input type="number" name="min_price" class="form-control"
+                   value="{{ request.GET.min_price }}">
+        </div>
+
+        <!-- Max Price -->
+        <div class="col-md-3">
+            <label class="form-label">Max Price</label>
+            <input type="number" name="max_price" class="form-control"
+                   value="{{ request.GET.max_price }}">
+        </div>
+
+        <!-- View Type -->
+        <div class="col-md-3">
+            <label class="form-label">View Type</label>
+            <select name="view_type" class="form-select">
+                <option value="">All</option>
+                {% for key, value in views %}
+                    <option value="{{ key }}"
+                        {% if request.GET.view_type == key %}selected{% endif %}>
+                        {{ value }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Availability -->
+        <div class="col-md-3 d-flex align-items-end">
+            <div class="form-check">
+                <input class="form-check-input"
+                       type="checkbox"
+                       name="available"
+                       value="1"
+                       {% if request.GET.available %}checked{% endif %}>
+                <label class="form-check-label">
+                    Available Only
+                </label>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="text-center mt-3">
+        <button class="btn btn-dark px-4">Apply Filters</button>
+        <a href="{% url 'rooms' %}" class="btn btn-outline-secondary ms-2">
+            Reset
+        </a>
+    </div>
+</form>
+
+<!-- ================= ROOMS LIST ================= -->
+<div class="row">
+
+{% for room in rooms %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+
+            {% if room.images.count > 0 %}
+<div id="roomCarousel{{ room.id }}" class="carousel slide" data-bs-ride="carousel">
+
+    <div class="carousel-inner">
+        {% for img in room.images.all %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            <img src="{{ img.image.url }}"
+                 class="d-block w-100"
+                 style="height:200px; object-fit:cover;">
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if room.images.count > 1 %}
+    <button class="carousel-control-prev" type="button"
+            data-bs-target="#roomCarousel{{ room.id }}"
+            data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+    </button>
+
+    <button class="carousel-control-next" type="button"
+            data-bs-target="#roomCarousel{{ room.id }}"
+            data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+    </button>
+    {% endif %}
+
+</div>
+{% else %}
+<img src="https://via.placeholder.com/400x200?text=Room+Image"
+     class="card-img-top">
+{% endif %}
+
+
+            <div class="card-body">
+                <h5 class="fw-bold">{{ room.room_name }}</h5>
+
+                <p class="mb-1">
+                    <strong>Hotel:</strong> {{ room.hotel.name }}
+                </p>
+
+                <p class="mb-1">
+                    <strong>Category:</strong> {{ room.hotel.get_category_display }}
+                </p>
+
+                <p class="mb-1">
+                    <strong>View:</strong> {{ room.view_type }}
+                </p>
+
+                <!-- ⭐ DISCOUNT PRICE -->
+                <p class="mb-1">
+                    <strong>Price:</strong>
+                    {% if room.discount > 0 %}
+                        <span class="text-muted text-decoration-line-through">
+                            ₹{{ room.price }}
+                        </span>
+                        <span class="text-success fw-bold ms-1">
+                            ₹{{ room.final_price }}
+                        </span>
+                        <span class="badge bg-danger ms-2">
+                            -{{ room.discount }}%
+                        </span>
+                    {% else %}
+                        <span class="fw-bold">₹{{ room.price }}</span>
+                    {% endif %}
+                </p>
+
+                <!-- ⭐ RATING -->
+                <div class="mb-2">
+                    {% if room.rating_count > 0 %}
+                        <span class="text-warning">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= room.average_rating %}
+                                    ⭐
+                                {% else %}
+                                    ☆
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                        <small class="text-muted">
+                            ({{ room.average_rating }}/5 · {{ room.rating_count }} reviews)
+                        </small>
+                    {% else %}
+                        <small class="text-muted">No ratings yet</small>
+                    {% endif %}
+                </div>
+
+                {% if room.is_available %}
+                    <span class="badge bg-success">Available</span>
+                {% else %}
+                    <span class="badge bg-danger">Booked</span>
+                {% endif %}
+
+                <div class="mt-3">
+                    <a href="{% url 'book_room' room.id %}"
+                       class="btn btn-dark btn-sm w-100 mb-2">
+                        Book Now
+                    </a>
+                    <a href="{% url 'room_detail' room.id %}"
+                       class="btn btn-outline-dark btn-sm w-100">
+                        View Room Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <p class="text-center text-muted">No rooms found</p>
+{% endfor %}
+
+</div>
+
+{% endblock %}
