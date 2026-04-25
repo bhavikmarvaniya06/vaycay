@@ -378,12 +378,12 @@ def payment_page(request, booking_id):
     # 🎟 coupon logic
     coupon = Coupon.objects.filter(user=request.user, is_used=False).first()
 
-    final_amount = booking.total_amount
+    final_amount = booking.final_amount  
     discount_amount = 0
 
     if coupon and coupon.expires_at > timezone.now():
         discount_amount = (booking.base_amount * coupon.discount) / 100
-        final_amount = booking.total_amount - discount_amount
+        final_amount = booking.final_amount   - discount_amount
 
     # 💳 Razorpay
     client = razorpay.Client(
@@ -465,9 +465,9 @@ def payment_success(request, booking_id):
 
     if final_amount:
         final_amount = Decimal(final_amount)
-        discount_amount = booking.total_amount - final_amount
+        discount_amount = booking.final_amount   - final_amount
     else:
-        final_amount = booking.total_amount
+        final_amount = booking.final_amount  
         discount_amount = Decimal("0.00")
 
     # ✅ SAVE BOOKING
